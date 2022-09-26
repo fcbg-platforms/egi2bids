@@ -1,0 +1,3 @@
+mne==1.1.1
+git+https://github.com/mne-tools/mne-bids@07af8cc27ab58e0e2600cf549e7151f6c1c93788
+PyQt6==6.3.1
