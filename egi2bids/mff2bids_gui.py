@@ -199,7 +199,7 @@ class bidsToEgiGui(QWidget):
             self.writeBIDS()
 
     def writeBIDS(self):
-        self.pushLog("writting BIDS...")
+        self.pushLog("writing BIDS...")
         mff2bids(
             self.EGIfile,
             self.rootDir,
@@ -209,7 +209,7 @@ class bidsToEgiGui(QWidget):
             run=self.form["Run"],
         )
 
-        self.pushLog("BIDS written successfuly")
+        self.pushLog("BIDS written successfully")
 
     def pushLog(self, text, flag=None):
         if flag == "warning":
