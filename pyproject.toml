@@ -10,11 +10,11 @@ readme = 'README.md'
 license = {file = 'LICENSE'}
 requires-python = '>=3.8'
 authors = [
-    {name = 'Gwenael Birot'. email = 'gwenael.birot@fcbg.ch'},
+    {name = 'Gwenael Birot', email = 'gwenael.birot@fcbg.ch'},
     {name = 'Mathieu Scheltienne', email = 'mathieu.scheltienne@fcbg.ch'},
 ]
 maintainers = [
-    {name = 'Gwenael Birot'. email = 'gwenael.birot@fcbg.ch'},
+    {name = 'Gwenael Birot', email = 'gwenael.birot@fcbg.ch'},
     {name = 'Mathieu Scheltienne', email = 'mathieu.scheltienne@fcbg.ch'},
 ]
 keywords = [
