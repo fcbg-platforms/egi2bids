@@ -10,7 +10,7 @@ def run():
     """Run sys_info() command."""
     parser = argparse.ArgumentParser(
         prog=f"{__package__.split('.')[0]}-gui",
-        description="EGI to BIDS GUI converter."
+        description="EGI to BIDS GUI converter.",
     )
     parser.parse_args()
 

@@ -7,7 +7,7 @@ def run():
     """Run egi2bids() command."""
     parser = argparse.ArgumentParser(
         prog=f"{__package__.split('.')[0]}",
-        description="EGI to BIDS CLI converter."
+        description="EGI to BIDS CLI converter.",
     )
     parser.add_argument(
         "mff_source",
