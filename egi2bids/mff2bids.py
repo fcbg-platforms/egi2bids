@@ -103,7 +103,7 @@ def mff2bids(
         "Manufacturer": "EGI",
         "EEGReference": "Cz",
         "InstitutionName": "Fondation Campus Biotech Geneva",
-        "InstitutionalDepartmentName": "Human Neuroscience Platform - MEEG-BCI Facility",
+        "InstitutionalDepartmentName": "Human Neuroscience Platform - MEEG-BCI Facility",  # noqa: E501
         "DeviceSerialNumber": "HNP_GES400",
         "CapManufacturer": "EGI",
         "CapManufacturersModelName": "HydroCel GSN 256",

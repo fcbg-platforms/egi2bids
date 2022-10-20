@@ -89,7 +89,8 @@ class bidsToEgiGui(QWidget):
         self.logBox.setReadOnly(True)
 
         # credits
-        urlCredits = "<a href='https://github.com/fcbg-hnp/bids'>https://github.com/fcbg-hnp/bids</a>"
+        gh_url = "https://github.com/fcbg-hnp/bids"
+        urlCredits = f"<a href='{gh_url}'>{gh_url}</a>"
         self.labelCredits = QLabel(urlCredits)
 
         #
@@ -122,7 +123,8 @@ class bidsToEgiGui(QWidget):
         self.rootDir = pname
         if not Path(pname).exists():
             self.pushLog(
-                "BIDS root directory does not exist. New directory will be created.",
+                "BIDS root directory does not exist. "
+                + "New directory will be created.",
                 flag="warning",
             )
         self.updateCurrentBIDSPath()
