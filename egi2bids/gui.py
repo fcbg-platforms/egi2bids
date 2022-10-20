@@ -1,7 +1,6 @@
 import sys
 from pathlib import Path
 
-from mff2bids import mff2bids
 from mne_bids import BIDSPath
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
@@ -16,6 +15,8 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from . import mff2bids
 
 
 class bidsToEgiGui(QWidget):
