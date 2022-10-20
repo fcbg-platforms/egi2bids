@@ -35,9 +35,11 @@ classifiers = [
     'License :: OSI Approved :: MIT License',
 ]
 dependencies = [
+    'mne>=1.2',
     'mne-bids',
     'numpy>=1.21',
     'psutil',
+    'PyQt6',
 ]
 
 [project.optional-dependencies]
