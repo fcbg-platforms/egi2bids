@@ -76,6 +76,8 @@ tracker = 'https://github.com/fcbg-hnp/egi2bids/issues'
 
 [project.scripts]
 egi2bids-sys_info = 'egi2bids.commands.sys_info:run'
+egi2bids = 'egi2bids.commands.egi2bids:run'
+egi2bids-gui = 'egi2bids.commands.gui:run'
 
 [tool.setuptools]
 include-package-data = false

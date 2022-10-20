@@ -1,10 +1,8 @@
-import sys
 from pathlib import Path
 
 from mne_bids import BIDSPath
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
-    QApplication,
     QFileDialog,
     QFormLayout,
     QGridLayout,
@@ -221,15 +219,3 @@ class bidsToEgiGui(QWidget):
             self.logBox.append(">> [ERROR] " + text)
         else:
             self.logBox.append(">> " + text)
-
-
-def main():
-    app = QApplication(sys.argv)
-    ex = bidsToEgiGui()
-    ex.resize(800, 500)
-    ex.show()
-    sys.exit(app.exec())
-
-
-if __name__ == "__main__":
-    main()
