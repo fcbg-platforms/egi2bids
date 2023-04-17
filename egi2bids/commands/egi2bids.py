@@ -20,7 +20,7 @@ def run():
         help="path to the BIDS root.",
     )
     parser.add_argument(
-        "-s",
+        "-sub",
         "--subject",
         type=str,
         metavar="str",
@@ -36,10 +36,10 @@ def run():
         required=True,
     )
     parser.add_argument(
-        "-s",
+        "-ses",
         "--session",
-        type=int,
-        metavar="int",
+        type=str,
+        metavar="str",
         help="Session ID (int).",
         required=True,
     )
