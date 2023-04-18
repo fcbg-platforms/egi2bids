@@ -1,4 +1,6 @@
 from pathlib import Path
+from shutil import copytree
+
 import numpy as np
 import mne
 from mne_bids import (
@@ -56,16 +58,21 @@ def mff2bids(
     run=None,
     event_id=None,
     line_frequency=50,
+    save_source=False,
+    overwrite=False,
 ):
-    bids_path = BIDSPath(root=Path(bids_root))
+    # mff_source
+    mff_source = Path(mff_source)
+    logger.info(mff_source)
+
+    # BIDS path
+    bids_root = Path(bids_root)
+    bids_path = BIDSPath(root=bids_root)
     bids_path.update(subject=subject)
     bids_path.update(session=session)
     bids_path.update(task=task)
     bids_path.update(datatype="eeg")
     bids_path.update(run=run)
-
-    mff_source = Path(mff_source)
-    logger.info(mff_source)
 
     # load EEG data
     raw = mne.io.read_raw_egi(Path(mff_source), preload=True)
@@ -101,8 +108,8 @@ def mff2bids(
         format="BrainVision",
         events_data=events_data,
         event_id=event_id,
-        overwrite=True,
         allow_preload=True,
+        overwrite=overwrite
     )
 
     bpath = bids_path.copy()
@@ -123,13 +130,12 @@ def mff2bids(
         path=bids_root, name="dataset_description.json", dataset_type="raw"
     )
 
-
-if __name__ == "__main__":
-    mff2bids(
-        r"C:\Local\git\BIDS\raw\5164-V1-aud-run1_20190312_024901.mff",
-        r"C:\Local\git\BIDS\datasets\study02",
-        subject="001",
-        task="MMN",
-        session="eeg",
-        run="002",
-    )
+    # save source
+    if save_source:
+        source_root = bids_root.joinpath("sourcedata")
+        print(f"saving source data to {source_root}")
+        source_path = bids_path.copy()
+        source_path.update(root=source_root)
+        source_path = source_path.fpath.with_suffix(mff_source.suffix)
+        copytree(mff_source, source_path, dirs_exist_ok=overwrite)
+    return()
