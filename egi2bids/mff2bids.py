@@ -1,5 +1,6 @@
 from pathlib import Path
-
+import tarfile
+import numpy as np
 import mne
 from mne_bids import (
     BIDSPath,
@@ -7,7 +8,7 @@ from mne_bids import (
     update_sidecar_json,
     write_raw_bids,
 )
-
+from .utils._logs import logger
 # fmt:off
 ch_names_egi = [
     "1", "F8", "3", "4", "F2", "6", "7", "8",
@@ -64,7 +65,17 @@ def mff2bids(
     bids_path.update(datatype="eeg")
     bids_path.update(run=run)
 
-    print(Path(mff_source))
+    mff_source = Path(mff_source)
+    logger.info(mff_source)
+
+    # Untar is necessary
+    if mff_source.suffix == ".tar":
+        tar.extractall('/path/to/directory')
+    # Open the tar archive for reading
+    with tarfile.open('archive.tar', 'r') as tar:
+        # Extract all files to a specific directory
+        mff_source = mff_source.with_suffix('')
+        tar.extractall(mff_source)
 
     # load EEG data
     raw = mne.io.read_raw_egi(Path(mff_source), preload=True)
@@ -78,12 +89,13 @@ def mff2bids(
         new_chs[ch] = ch_names_egi[i]
     raw.rename_channels(new_chs)
 
-    # find events in stim channel
-    events_data = None
-    if event_id is not None:
+    # find events in stim channel TODO: provide events and checks
+    if event_id is None:
         events_data = mne.find_events(raw, stim_channel="STI 014")
-
-    # event_id = {"fixation cross":1,"stim":2}
+        event_ids = np.unique(events_data[:, 2])
+        event_id = {}
+        for event in event_ids:
+            event_id[f"Unkown_{event}"] = event
 
     # write BIDS
     write_raw_bids(
