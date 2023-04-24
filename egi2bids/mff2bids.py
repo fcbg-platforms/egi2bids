@@ -14,8 +14,8 @@ from mne_bids import (
     write_raw_bids,
 )
 
-from .utils._logs import logger
 from .utils._checks import _check_value
+from .utils._logs import logger
 
 # fmt:off
 ch_names_egi = [
@@ -117,11 +117,13 @@ def mff2bids(
         # BIDS path
         bids_root = Path(bids_root)
         bids_path = BIDSPath(root=bids_root)
-        bids_path.update(subject=subject,
-                         session=session,
-                         task=task,
-                         datatype="eeg",
-                         run=run)
+        bids_path.update(
+            subject=subject,
+            session=session,
+            task=task,
+            datatype="eeg",
+            run=run,
+        )
 
         # load EEG data
         raw = mne.io.read_raw_egi(Path(mff_source), preload=True)
