@@ -10,10 +10,10 @@ from mne.datasets.testing import data_path
 
 from egi2bids.mff2bids import mff2bids
 
-base_dir = op.join(op.dirname(op.abspath(__file__)), "data")
+base_dir = os.path.join(op.dirname(op.abspath(__file__)), "data")
 testing_path = data_path(download=True)
-egi_path = op.join(testing_path, "EGI")
-egi_mff_path = op.join(egi_path, "test_egi.mff")
+egi_path = testing_path / "EGI"
+egi_mff_path = egi_path / "test_egi.mff"
 
 
 # ZIP
@@ -54,8 +54,7 @@ with tarfile.open(output_path_tar_folder, "w") as tar:
 )
 def test_file_conversion(tmp_path, file):
     # create temporary directory and file for testing
-    print(file)
-    bids_path = op.join(tmp_path, "bids")
+    bids_path = tmp_path / "bids"
     bids_root = mff2bids(
         file,
         bids_path,
@@ -72,7 +71,7 @@ def test_file_conversion(tmp_path, file):
 
 
 def test_mff2bids_save_source(tmp_path):
-    bids_path = op.join(tmp_path, "bids")
+    bids_path = tmp_path / "bids"
     bids_root = mff2bids(
         egi_mff_path,
         bids_path,

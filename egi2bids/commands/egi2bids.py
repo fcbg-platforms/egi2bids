@@ -15,8 +15,8 @@ def run():
         type=str,
         help=(
             "path to the input mff file. "
-            "Can be a '.mmf' folder or a '.mff.tar', "
-            "'.mff.tar.gz' or '.mff.zip' archive."
+            "Can be a '.mff' folder or a '.mff.tar', "
+            "or '.mff.zip' archive."
         ),
     )
     parser.add_argument(
@@ -65,7 +65,7 @@ def run():
     parser.add_argument(
         "--overwrite",
         action="store_true",
-        help="Either or not toallow overwritting data.",
+        help="Overwrites existing data.",
         required=False,
     ),
     parser.add_argument(

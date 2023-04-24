@@ -15,6 +15,7 @@ from mne_bids import (
 )
 
 from .utils._logs import logger
+from .utils._checks import _check_value
 
 # fmt:off
 ch_names_egi = [
@@ -56,10 +57,11 @@ ch_names_egi = [
 
 # fmt: on
 def _extract_folder(file, dir=None):
-    """Extracts a compressed folder to its original form"""
+    """Extracts a .mmf compressed folder to its original form"""
     # Get the path and file extension
     file = Path(file)
     ext = file.suffix
+    _check_value(ext, (".tar", ".zip", ".mff"), "extension")
     # Dir
     if dir is None:
         dir = os.path.cwd()
@@ -115,11 +117,11 @@ def mff2bids(
         # BIDS path
         bids_root = Path(bids_root)
         bids_path = BIDSPath(root=bids_root)
-        bids_path.update(subject=subject)
-        bids_path.update(session=session)
-        bids_path.update(task=task)
-        bids_path.update(datatype="eeg")
-        bids_path.update(run=run)
+        bids_path.update(subject=subject,
+                         session=session,
+                         task=task,
+                         datatype="eeg",
+                         run=run)
 
         # load EEG data
         raw = mne.io.read_raw_egi(Path(mff_source), preload=True)
@@ -180,7 +182,7 @@ def mff2bids(
         # save source
         if save_source:
             source_root = bids_root.joinpath("sourcedata")
-            print(f"saving source data to {source_root}")
+            logger.info("Saving source data to %s", source_root)
             source_path = bids_path.copy()
             source_path.update(root=source_root)
             source_path = source_path.fpath.with_suffix(mff_source.suffix)
