@@ -2,7 +2,7 @@
 
 import pytest
 
-from .._docs import copy_doc, fill_doc
+from egi2bids.utils._docs import copy_doc, fill_doc
 
 
 def test_fill_doc():
