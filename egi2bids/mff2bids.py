@@ -1,4 +1,6 @@
+import os
 import tarfile
+import tempfile
 import zipfile
 from pathlib import Path
 from shutil import copytree
@@ -53,40 +55,38 @@ ch_names_egi = [
 
 
 # fmt: on
-def _extract_folder(file):
+def _extract_folder(file, dir=None):
     """Extracts a compressed folder to its original form"""
     # Get the path and file extension
     file = Path(file)
     ext = file.suffix
+    # Dir
+    if dir is None:
+        dir = os.path.cwd()
     # Open the archive file based on its type
-    print(file)
     if ext == ".tar":
-        path = file.with_name(file.name.replace(".tar", ""))
-        logger.info(f"Extracting zip archive to {file} to {path}")
+        logger.info(f"Extracting zip archive {file} to {dir}")
         archive = tarfile.open(file)
-        archive.extractall(path)
-        archive.close()
-
-    elif ext == ".gz":
-        path = file.with_name(file.name.replace(".tar.gz", ""))
-        logger.info(f"Extracting zip archive to {file} to {path}")
-        archive = tarfile.open(file, "r:gz")
-        archive.extractall(path)
+        archive.extractall(dir)
         archive.close()
 
     elif ext == ".zip":
-        path = file.with_name(file.name.replace(".zip", ""))
-        logger.info(f"Extracting zip archive to {file} to {path}")
+        logger.info(f"Extracting zip archive {file} to {dir}")
         archive = zipfile.ZipFile(file)
-        archive.extractall(path)
+        archive.extractall(dir)
         archive.close()
 
     elif ext == ".mff":
-        path = file
+        return file
     else:
         raise ValueError(f"Unsupported file type: {ext}")
-    print(path)
-    return path
+
+    # Check if archive contains mff subfolders
+    for root, dirs, _ in os.walk(dir):
+        if "Contents" in dirs:
+            logger.info(f"mff file found in {root}")
+            return Path(root)
+    raise ('Archive does not contain a "Content" folder.')
 
 
 def mff2bids(
@@ -100,83 +100,89 @@ def mff2bids(
     line_frequency=50,
     save_source=False,
     overwrite=False,
+    working_dir=None,
 ):
-    # mff_source
-    logger.info(mff_source)
-    # Extract
-    mff_source = _extract_folder(mff_source)
+    with (
+        working_dir
+        if working_dir is not None
+        else tempfile.TemporaryDirectory(suffix=".mff") as wd
+    ):
+        # mff_source
+        logger.info(mff_source)
+        # Extract
+        mff_source = _extract_folder(mff_source, dir=wd)
 
-    # BIDS path
-    bids_root = Path(bids_root)
-    bids_path = BIDSPath(root=bids_root)
-    bids_path.update(subject=subject)
-    bids_path.update(session=session)
-    bids_path.update(task=task)
-    bids_path.update(datatype="eeg")
-    bids_path.update(run=run)
+        # BIDS path
+        bids_root = Path(bids_root)
+        bids_path = BIDSPath(root=bids_root)
+        bids_path.update(subject=subject)
+        bids_path.update(session=session)
+        bids_path.update(task=task)
+        bids_path.update(datatype="eeg")
+        bids_path.update(run=run)
 
-    # load EEG data
-    raw = mne.io.read_raw_egi(Path(mff_source), preload=True)
-    raw.info["line_freq"] = line_frequency
+        # load EEG data
+        raw = mne.io.read_raw_egi(Path(mff_source), preload=True)
+        raw.info["line_freq"] = line_frequency
 
-    # rename channels
-    new_chs = {}
-    for i, ch in enumerate(raw.info["ch_names"]):
-        if i > 256:
-            break
-        new_chs[ch] = ch_names_egi[i]
-    raw.rename_channels(new_chs)
+        # rename channels
+        new_chs = {}
+        for i, ch in enumerate(raw.info["ch_names"]):
+            if i > 256:
+                break
+            new_chs[ch] = ch_names_egi[i]
+        raw.rename_channels(new_chs)
 
-    # find events in stim channel
-    stim_channel = "STI 014"
-    if stim_channel in raw.ch_names:
-        events_data = mne.find_events(raw, stim_channel=stim_channel)
-        # if event_id are not provided
-        if event_id is None:
-            event_ids = np.unique(events_data[:, 2])
-            event_id = {}
-            for event in event_ids:
-                event_id[f"Unkown_{event}"] = event
-        # TODO: check is provided events match events_data
-    else:
-        events_data = None
-        event_id = None
+        # find events in stim channel
+        stim_channel = "STI 014"
+        if stim_channel in raw.ch_names:
+            events_data = mne.find_events(raw, stim_channel=stim_channel)
+            # if event_id are not provided
+            if event_id is None:
+                event_ids = np.unique(events_data[:, 2])
+                event_id = {}
+                for event in event_ids:
+                    event_id[f"Unkown_{event}"] = event
+            # TODO: check is provided events match events_data
+        else:
+            events_data = None
+            event_id = None
 
-    # write BIDS
-    write_raw_bids(
-        raw,
-        bids_path,
-        format="BrainVision",
-        events_data=events_data,
-        event_id=event_id,
-        allow_preload=True,
-        overwrite=overwrite,
-    )
+        # write BIDS
+        write_raw_bids(
+            raw,
+            bids_path,
+            format="BrainVision",
+            events_data=events_data,
+            event_id=event_id,
+            allow_preload=True,
+            overwrite=overwrite,
+        )
 
-    bpath = bids_path.copy()
-    bpath.update(extension=".json")
+        bpath = bids_path.copy()
+        bpath.update(extension=".json")
 
-    sidecar_dict = {
-        "Manufacturer": "EGI",
-        "EEGReference": "Cz",
-        "InstitutionName": "Fondation Campus Biotech Geneva",
-        "InstitutionalDepartmentName": "Human Neuroscience Platform - MEEG-BCI Facility",  # noqa: E501
-        "DeviceSerialNumber": "HNP_GES400",
-        "CapManufacturer": "EGI",
-        "CapManufacturersModelName": "HydroCel GSN 256",
-    }
+        sidecar_dict = {
+            "Manufacturer": "EGI",
+            "EEGReference": "Cz",
+            "InstitutionName": "Fondation Campus Biotech Geneva",
+            "InstitutionalDepartmentName": "Human Neuroscience Platform - MEEG-BCI Facility",  # noqa: E501
+            "DeviceSerialNumber": "HNP_GES400",
+            "CapManufacturer": "EGI",
+            "CapManufacturersModelName": "HydroCel GSN 256",
+        }
 
-    update_sidecar_json(bpath, sidecar_dict)
-    make_dataset_description(
-        path=bids_root, name="dataset_description.json", dataset_type="raw"
-    )
+        update_sidecar_json(bpath, sidecar_dict)
+        make_dataset_description(
+            path=bids_root, name="dataset_description.json", dataset_type="raw"
+        )
 
-    # save source
-    if save_source:
-        source_root = bids_root.joinpath("sourcedata")
-        print(f"saving source data to {source_root}")
-        source_path = bids_path.copy()
-        source_path.update(root=source_root)
-        source_path = source_path.fpath.with_suffix(mff_source.suffix)
-        copytree(mff_source, source_path, dirs_exist_ok=overwrite)
-    return bids_root
+        # save source
+        if save_source:
+            source_root = bids_root.joinpath("sourcedata")
+            print(f"saving source data to {source_root}")
+            source_path = bids_path.copy()
+            source_path.update(root=source_root)
+            source_path = source_path.fpath.with_suffix(mff_source.suffix)
+            copytree(mff_source, source_path, dirs_exist_ok=overwrite)
+        return bids_root

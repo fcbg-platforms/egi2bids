@@ -1,5 +1,8 @@
+import os
 import os.path as op
 import shutil
+import tarfile
+import zipfile
 
 import pytest
 from bids.layout import BIDSLayout
@@ -10,17 +13,51 @@ from egi2bids.mff2bids import mff2bids
 base_dir = op.join(op.dirname(op.abspath(__file__)), "data")
 testing_path = data_path(download=True)
 egi_path = op.join(testing_path, "EGI")
-egi_mff_fname = op.join(egi_path, "test_egi.mff")
+egi_mff_path = op.join(egi_path, "test_egi.mff")
 
 
-@pytest.mark.parametrize("filetype", ["tar", "zip", "gztar"])
-def test_file_conversion(tmp_path, filetype):
+# ZIP
+# flat
+output_path_zip = shutil.make_archive("archive_flat", "zip", egi_mff_path)
+# Folder
+output_path_zip_folder = "archive_folder.mff.zip"
+with zipfile.ZipFile(
+    output_path_zip_folder, "w", compression=zipfile.ZIP_DEFLATED
+) as zipf:
+    for root, dirs, files in os.walk(egi_mff_path):
+        for file in files:
+            zipf.write(
+                os.path.join(root, file),
+                os.path.join(
+                    "archive_folder.mff",
+                    os.path.relpath(os.path.join(root, file), egi_mff_path),
+                ),
+            )
+
+# TAR
+# flat
+output_path_tar = shutil.make_archive("archive_flat", "tar", egi_mff_path)
+# folder
+output_path_tar_folder = "archive_folder.mff.tar"
+with tarfile.open(output_path_tar_folder, "w") as tar:
+    tar.add(egi_mff_path, arcname="archive_folder.mff")
+
+
+@pytest.mark.parametrize(
+    "file",
+    [
+        output_path_zip,
+        output_path_zip_folder,
+        output_path_tar,
+        output_path_tar_folder,
+    ],
+)
+def test_file_conversion(tmp_path, file):
     # create temporary directory and file for testing
-    mff_path = op.join(tmp_path, "test.mff")
+    print(file)
     bids_path = op.join(tmp_path, "bids")
-    archive_path = shutil.make_archive(mff_path, filetype, egi_mff_fname)
     bids_root = mff2bids(
-        archive_path,
+        file,
         bids_path,
         "test",
         "test",
@@ -37,7 +74,7 @@ def test_file_conversion(tmp_path, filetype):
 def test_mff2bids_save_source(tmp_path):
     bids_path = op.join(tmp_path, "bids")
     bids_root = mff2bids(
-        egi_mff_fname,
+        egi_mff_path,
         bids_path,
         "test",
         "test",
