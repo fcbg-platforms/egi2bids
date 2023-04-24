@@ -1,7 +1,6 @@
 import os.path as op
 import shutil
 
-import numpy as np
 import pytest
 from bids.layout import BIDSLayout
 from mne.datasets.testing import data_path

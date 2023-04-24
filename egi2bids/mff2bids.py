@@ -1,4 +1,3 @@
-import os
 import tarfile
 import zipfile
 from pathlib import Path
@@ -14,7 +13,6 @@ from mne_bids import (
 )
 
 from .utils._logs import logger
-
 
 # fmt:off
 ch_names_egi = [
@@ -52,6 +50,8 @@ ch_names_egi = [
     "249", "250", "251", "F9", "253", "254", "255", "256",
     "Cz",
 ]
+
+
 # fmt: on
 def _extract_folder(file):
     """Extracts a compressed folder to its original form"""

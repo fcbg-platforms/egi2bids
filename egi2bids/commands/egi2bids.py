@@ -12,7 +12,11 @@ def run():
     parser.add_argument(
         "mff_source",
         type=str,
-        help="path to the input mff file. Can be a '.mmf' folder or a '.mff.tar', '.mff.tar.gz' or '.mff.zip' archive.",
+        help=(
+            "path to the input mff file. "
+            "Can be a '.mmf' folder or a '.mff.tar', "
+            "'.mff.tar.gz' or '.mff.zip' archive."
+        ),
     )
     parser.add_argument(
         "bids_root",
