@@ -15,7 +15,7 @@ from mne_bids import (
 )
 
 from .utils._checks import _check_value
-from .utils._logs import logger
+from .utils._logs import logger, verbose
 
 # fmt:off
 ch_names_egi = [
@@ -91,6 +91,7 @@ def _extract_folder(file, dir=None):
     raise ('Archive does not contain a "Content" folder.')
 
 
+@verbose
 def mff2bids(
     mff_source,
     bids_root,
@@ -103,6 +104,7 @@ def mff2bids(
     save_source=False,
     overwrite=False,
     working_dir=None,
+    verbose=None,
 ):
     with (
         working_dir

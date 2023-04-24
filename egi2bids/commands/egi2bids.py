@@ -1,7 +1,6 @@
 import argparse
 
 from .. import mff2bids
-from ..utils._logs import logger
 
 
 def run():
@@ -76,9 +75,6 @@ def run():
     )
 
     args = parser.parse_args()
-
-    logger.set_log_level(level=args.loglevel.upper())
-
     mff2bids(
         mff_source=args.mff_source,
         bids_root=args.bids_root,
@@ -88,4 +84,5 @@ def run():
         run=args.run,
         save_source=args.save_source,
         overwrite=args.overwrite,
+        verbose=args.loglevel.upper(),
     )
