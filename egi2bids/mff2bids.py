@@ -1,15 +1,21 @@
+import os
+import tarfile
+import zipfile
 from pathlib import Path
 from shutil import copytree
 
-import numpy as np
 import mne
+import numpy as np
 from mne_bids import (
     BIDSPath,
     make_dataset_description,
     update_sidecar_json,
     write_raw_bids,
 )
+
 from .utils._logs import logger
+
+
 # fmt:off
 ch_names_egi = [
     "1", "F8", "3", "4", "F2", "6", "7", "8",
@@ -47,6 +53,40 @@ ch_names_egi = [
     "Cz",
 ]
 # fmt: on
+def _extract_folder(file):
+    """Extracts a compressed folder to its original form"""
+    # Get the path and file extension
+    file = Path(file)
+    ext = file.suffix
+    # Open the archive file based on its type
+    print(file)
+    if ext == ".tar":
+        path = file.with_name(file.name.replace(".tar", ""))
+        logger.info(f"Extracting zip archive to {file} to {path}")
+        archive = tarfile.open(file)
+        archive.extractall(path)
+        archive.close()
+
+    elif ext == ".gz":
+        path = file.with_name(file.name.replace(".tar.gz", ""))
+        logger.info(f"Extracting zip archive to {file} to {path}")
+        archive = tarfile.open(file, "r:gz")
+        archive.extractall(path)
+        archive.close()
+
+    elif ext == ".zip":
+        path = file.with_name(file.name.replace(".zip", ""))
+        logger.info(f"Extracting zip archive to {file} to {path}")
+        archive = zipfile.ZipFile(file)
+        archive.extractall(path)
+        archive.close()
+
+    elif ext == ".mff":
+        path = file
+    else:
+        raise ValueError(f"Unsupported file type: {ext}")
+    print(path)
+    return path
 
 
 def mff2bids(
@@ -62,8 +102,9 @@ def mff2bids(
     overwrite=False,
 ):
     # mff_source
-    mff_source = Path(mff_source)
     logger.info(mff_source)
+    # Extract
+    mff_source = _extract_folder(mff_source)
 
     # BIDS path
     bids_root = Path(bids_root)
@@ -109,7 +150,7 @@ def mff2bids(
         events_data=events_data,
         event_id=event_id,
         allow_preload=True,
-        overwrite=overwrite
+        overwrite=overwrite,
     )
 
     bpath = bids_path.copy()
@@ -138,4 +179,4 @@ def mff2bids(
         source_path.update(root=source_root)
         source_path = source_path.fpath.with_suffix(mff_source.suffix)
         copytree(mff_source, source_path, dirs_exist_ok=overwrite)
-    return()
+    return bids_root

@@ -59,6 +59,7 @@ style = [
 test = [
     'pytest',
     'pytest-cov',
+    'pybids',
 ]
 all = [
     'egi2bids[style]',
