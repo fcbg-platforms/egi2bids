@@ -116,16 +116,34 @@ def mff2bids(
         # Extract
         mff_source = _extract_folder(mff_source, dir=wd)
 
-        # BIDS path
+        # BIDS root
         bids_root = Path(bids_root)
-        bids_path = BIDSPath(root=bids_root)
-        bids_path.update(
+        eeg_bids_path = BIDSPath(root=bids_root)
+        # eeg path
+        eeg_bids_path.update(
             subject=subject,
             session=session,
             task=task,
             datatype="eeg",
             run=run,
         )
+        # JSON sidecar path
+        json_bids_path = eeg_bids_path.copy()
+        json_bids_path.update(extension=".json")
+        # Source path.
+        if save_source:
+            source_bids_root = bids_root.joinpath("sourcedata")
+            logger.info("Saving source data to %s", source_bids_root)
+            source_bids_path = eeg_bids_path.copy()
+            source_bids_path.update(root=source_bids_root)
+            source_bids_path = source_bids_path.fpath.with_suffix(
+                mff_source.suffix
+            )
+            if source_bids_path.exists() and overwrite is False:
+                raise ValueError(
+                    f"Cannot write source data. Source data {source_bids_path}"
+                    "already exists but overwrite is set to False."
+                )
 
         # load EEG data
         raw = mne.io.read_raw_egi(Path(mff_source), preload=True)
@@ -154,20 +172,7 @@ def mff2bids(
             events_data = None
             event_id = None
 
-        # write BIDS
-        write_raw_bids(
-            raw,
-            bids_path,
-            format="BrainVision",
-            events_data=events_data,
-            event_id=event_id,
-            allow_preload=True,
-            overwrite=overwrite,
-        )
-
-        bpath = bids_path.copy()
-        bpath.update(extension=".json")
-
+        # update sidecar json
         sidecar_dict = {
             "Manufacturer": "EGI",
             "EEGReference": "Cz",
@@ -178,17 +183,22 @@ def mff2bids(
             "CapManufacturersModelName": "HydroCel GSN 256",
         }
 
-        update_sidecar_json(bpath, sidecar_dict)
+        # write eeg
+        write_raw_bids(
+            raw,
+            eeg_bids_path,
+            format="BrainVision",
+            events_data=events_data,
+            event_id=event_id,
+            allow_preload=True,
+            overwrite=overwrite,
+        )
+        update_sidecar_json(json_bids_path, sidecar_dict)
         make_dataset_description(
             path=bids_root, name="dataset_description.json", dataset_type="raw"
         )
-
-        # save source
+        # write source
         if save_source:
-            source_root = bids_root.joinpath("sourcedata")
-            logger.info("Saving source data to %s", source_root)
-            source_path = bids_path.copy()
-            source_path.update(root=source_root)
-            source_path = source_path.fpath.with_suffix(mff_source.suffix)
-            copytree(mff_source, source_path, dirs_exist_ok=overwrite)
+            copytree(mff_source, source_bids_path, dirs_exist_ok=overwrite)
+
         return bids_root
