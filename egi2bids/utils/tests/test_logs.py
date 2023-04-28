@@ -6,7 +6,10 @@ from typing import Optional, Union
 import pytest
 
 from egi2bids.utils.logs import (
-    add_file_handler, logger, set_log_level, verbose
+    add_file_handler,
+    logger,
+    set_log_level,
+    verbose,
 )
 
 logger.propagate = True

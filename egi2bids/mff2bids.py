@@ -57,7 +57,9 @@ CH_NAMES_EGI = [
 # fmt: on
 
 
-def _extract_folder(file: Union[str, Path], dir_: Union[str, Path] = None) -> Path:
+def _extract_folder(
+    file: Union[str, Path], dir_: Union[str, Path] = None
+) -> Path:
     """Extract a .mff compressed folder to its original form."""
     # check paths and file extension
     file = _ensure_path(dir_, must_exist=True)
