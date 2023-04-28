@@ -87,7 +87,6 @@ def test_file_conversion(tmp_path, file, request):
         "test",
         run=1,
         event_id=None,
-        line_frequency=50,
         save_source=False,
         overwrite=False,
     )
@@ -104,7 +103,6 @@ def test_mff2bids_save_source(tmp_path):
         "test",
         run=1,
         event_id=None,
-        line_frequency=50,
         save_source=True,
         overwrite=False,
     )

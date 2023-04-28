@@ -16,7 +16,7 @@ from mne_bids import (
 )
 
 from .utils._checks import _check_value, _ensure_path
-from .utils._logs import logger, verbose
+from .utils.logs import logger, verbose
 
 # fmt:off
 CH_NAMES_EGI = [
