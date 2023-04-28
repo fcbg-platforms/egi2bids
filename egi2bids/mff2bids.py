@@ -143,7 +143,7 @@ def mff2bids(
     raw.info["line_freq"] = 50  # Hz, hard-coded for campus biotech/Europe.
 
     # rename channels
-    new_chs = {_extract_folder}
+    new_chs = dict()
     for i, ch in enumerate(raw.info["ch_names"]):
         if i > 256:
             break
