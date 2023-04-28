@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 from bids.layout import BIDSLayout
-from mne.datasets.testing import data_path
+from mne.datasets import testing
 
 from egi2bids.mff2bids import mff2bids
 
 base_dir = Path(op.join(op.dirname(op.abspath(__file__)), "data"))
-testing_path = data_path(download=True)
+testing_path = testing.data_path(download=True)
 egi_path = testing_path / "EGI"
 egi_mff_path = egi_path / "test_egi.mff"
 

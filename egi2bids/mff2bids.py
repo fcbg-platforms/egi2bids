@@ -4,6 +4,7 @@ import tempfile
 import zipfile
 from pathlib import Path
 from shutil import copytree
+from typing import Union
 
 import mne
 import numpy as np
@@ -14,7 +15,7 @@ from mne_bids import (
     write_raw_bids,
 )
 
-from .utils._checks import _check_value
+from .utils._checks import _check_value, _ensure_path
 from .utils._logs import logger, verbose
 
 # fmt:off
@@ -53,42 +54,35 @@ ch_names_egi = [
     "249", "250", "251", "F9", "253", "254", "255", "256",
     "Cz",
 ]
-
-
 # fmt: on
-def _extract_folder(file, dir=None):
-    """Extracts a .mmf compressed folder to its original form"""
-    # Get the path and file extension
-    file = Path(file)
+
+
+def _extract_folder(file: Union[str, Path], dir_: Union[str, Path] = None):
+    """Extract a .mff compressed folder to its original form."""
+    # check paths and file extension
+    file = _ensure_path(dir_, must_exist=True)
     ext = file.suffix
     _check_value(ext, (".tar", ".zip", ".mff"), "extension")
-    # Dir
-    if dir is None:
-        dir = os.path.cwd()
-    # Open the archive file based on its type
-    if ext == ".tar":
-        logger.info(f"Extracting zip archive {file} to {dir}")
-        archive = tarfile.open(file)
-        archive.extractall(dir)
-        archive.close()
-
-    elif ext == ".zip":
-        logger.info(f"Extracting zip archive {file} to {dir}")
-        archive = zipfile.ZipFile(file)
-        archive.extractall(dir)
-        archive.close()
+    dir_ = Path.cwd() if dir_ is None else dir_
+    dir_ = _ensure_path(dir_, must_exist=True)
+    # open the archive if needed
+    archive_readers = {
+        ".tar": tarfile.open,
+        ".zip": zipfile.ZipFile,
+    }
+    if ext in (".tar", ".zip"):
+        logger.info("Extracting '%s' archive %s to %s.", ext, file, dir_)
+        with archive_readers[ext](file, "r") as archive:
+            archive.extractall(dir_)
+        for root, dirs, _ in os.walk(dir):
+            if "Contents" in dirs:
+                logger.info("MFF file found in %s", root)
+                return Path(root)
+        else:
+            raise(f"The '{ext}' archive does not contain a 'Content' folder.")
 
     elif ext == ".mff":
         return file
-    else:
-        raise ValueError(f"Unsupported file type: {ext}")
-
-    # Check if archive contains mff subfolders
-    for root, dirs, _ in os.walk(dir):
-        if "Contents" in dirs:
-            logger.info(f"mff file found in {root}")
-            return Path(root)
-    raise ('Archive does not contain a "Content" folder.')
 
 
 @verbose
@@ -114,7 +108,7 @@ def mff2bids(
         # mff_source
         logger.info(mff_source)
         # Extract
-        mff_source = _extract_folder(mff_source, dir=wd)
+        mff_source = _extract_folder(mff_source, dir_=wd)
 
         # BIDS root
         bids_root = Path(bids_root)
@@ -150,7 +144,7 @@ def mff2bids(
         raw.info["line_freq"] = line_frequency
 
         # rename channels
-        new_chs = {}
+        new_chs = {_extract_folder}
         for i, ch in enumerate(raw.info["ch_names"]):
             if i > 256:
                 break

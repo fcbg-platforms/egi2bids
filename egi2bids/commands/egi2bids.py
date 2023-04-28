@@ -13,7 +13,7 @@ def run():
         "mff_source",
         type=str,
         help=(
-            "path to the input mff file. "
+            "path to the input MFF file. "
             "Can be a '.mff' folder or a '.mff.tar', "
             "or '.mff.zip' archive."
         ),
