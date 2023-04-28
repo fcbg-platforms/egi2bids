@@ -112,7 +112,7 @@ def mff2bids(
         mff_source = _extract_folder(mff_source, dir_=wd)
 
         # BIDS root
-        bids_root = _ensure_path(bids_root, must_exist=True)
+        bids_root = _ensure_path(bids_root, must_exist=False)
         eeg_bids_path = BIDSPath(
             root=bids_root,
             subject=subject,
