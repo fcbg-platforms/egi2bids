@@ -89,16 +89,17 @@ def _extract_folder(
 
 @verbose
 def mff2bids(
-    mff_source,
-    bids_root,
+    mff_source: Union[str, Path],
+    bids_root: Union[str, Path],
     subject,
     session,
     task,
     run=None,
     event_id=None,
     save_source: bool = False,
-    overwrite: bool = False,
     working_dir=None,
+    *,
+    overwrite: bool = False,
     verbose=None,
 ):
     logger.info("Processing %s", mff_source)
