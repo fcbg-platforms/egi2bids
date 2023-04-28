@@ -4,11 +4,11 @@ build-backend = 'setuptools.build_meta'
 
 [project]
 name = 'egi2bids'
-version = '0.1.0'
+version = '0.2.0.dev'
 description = 'BIDS conversion of EGI datasets (.mff)'
 readme = 'README.md'
 license = {file = 'LICENSE'}
-requires-python = '>=3.8'
+requires-python = '>=3.9'
 authors = [
     {name = 'Gwenael Birot', email = 'gwenael.birot@fcbg.ch'},
     {name = 'Mathieu Scheltienne', email = 'mathieu.scheltienne@fcbg.ch'},
@@ -30,6 +30,7 @@ classifiers = [
     'Programming Language :: Python :: 3 :: Only',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
     'Natural Language :: English',
     'License :: OSI Approved :: MIT License',
 ]
@@ -45,15 +46,15 @@ dependencies = [
 [project.optional-dependencies]
 build = [
     'build',
+    'packaging',
     'twine',
 ]
 style = [
-    'bibclean',
     'black',
     'codespell',
     'isort',
-    'flake8',
     'pydocstyle[toml]',
+    'ruff',
 ]
 test = [
     'pytest',
@@ -70,10 +71,10 @@ full = [
 ]
 
 [project.urls]
-homepage = 'https://github.com/fcbg-hnp/egi2bids'
-documentation = 'https://github.com/fcbg-hnp/egi2bids'
-source = 'https://github.com/fcbg-hnp/egi2bids'
-tracker = 'https://github.com/fcbg-hnp/egi2bids/issues'
+homepage = 'https://github.com/fcbg-hnp-meeg/egi2bids'
+documentation = 'https://github.com/fcbg-hnp-meeg/egi2bids'
+source = 'https://github.com/fcbg-hnp-meeg/egi2bids'
+tracker = 'https://github.com/fcbg-hnp-meeg/egi2bids/issues'
 
 [project.scripts]
 egi2bids-sys_info = 'egi2bids.commands.sys_info:run'
