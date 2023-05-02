@@ -62,7 +62,7 @@ def _extract_folder(
 ) -> Path:
     """Extract a .mff compressed folder to its original form."""
     # check paths and file extension
-    file = _ensure_path(dir_, must_exist=True)
+    file = _ensure_path(file, must_exist=True)
     ext = file.suffix
     _check_value(ext, (".tar", ".zip", ".mff"), "extension")
     dir_ = Path.cwd() if dir_ is None else dir_
@@ -76,7 +76,7 @@ def _extract_folder(
         logger.info("Extracting '%s' archive %s to %s.", ext, file, dir_)
         with archive_readers[ext](file, "r") as archive:
             archive.extractall(dir_)
-        for root, dirs, _ in os.walk(dir):
+        for root, dirs, _ in os.walk(dir_):
             if "Contents" in dirs:
                 logger.info("MFF file found in %s", root)
                 return Path(root)
