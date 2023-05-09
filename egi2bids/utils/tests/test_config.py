@@ -1,6 +1,6 @@
 from io import StringIO
 
-from .._config import sys_info
+from egi2bids.utils.config import sys_info
 
 
 def test_sys_info():
@@ -28,5 +28,6 @@ def test_sys_info():
     value = out.getvalue()
     out.close()
 
+    assert "build" in value
     assert "style" in value
     assert "test" in value

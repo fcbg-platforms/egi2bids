@@ -2,7 +2,7 @@
 
 import pytest
 
-from .._imports import import_optional_dependency
+from egi2bids.utils._imports import import_optional_dependency
 
 
 def test_import_optional_dependency():

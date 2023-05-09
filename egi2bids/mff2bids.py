@@ -1,6 +1,13 @@
+import os
+import tarfile
+import tempfile
+import zipfile
 from pathlib import Path
+from shutil import copytree
+from typing import Union
 
 import mne
+import numpy as np
 from mne_bids import (
     BIDSPath,
     make_dataset_description,
@@ -8,8 +15,11 @@ from mne_bids import (
     write_raw_bids,
 )
 
+from .utils._checks import _check_value, _ensure_path
+from .utils.logs import logger, verbose
+
 # fmt:off
-ch_names_egi = [
+CH_NAMES_EGI = [
     "1", "F8", "3", "4", "F2", "6", "7", "8",
     "9", "AF8", "11", "AF4", "13", "14", "FCz", "16",
     "17", "FP2", "19", "20", "Fz", "22", "23", "FC1",
@@ -47,80 +57,142 @@ ch_names_egi = [
 # fmt: on
 
 
+def _extract_folder(
+    file: Union[str, Path], dir_: Union[str, Path] = None
+) -> Path:
+    """Extract a .mff compressed folder to its original form."""
+    # check paths and file extension
+    file = _ensure_path(file, must_exist=True)
+    ext = file.suffix
+    _check_value(ext, (".tar", ".zip", ".mff"), "extension")
+    dir_ = Path.cwd() if dir_ is None else dir_
+    dir_ = _ensure_path(dir_, must_exist=True)
+    # open the archive if needed
+    archive_readers = {
+        ".tar": tarfile.open,
+        ".zip": zipfile.ZipFile,
+    }
+    if ext in (".tar", ".zip"):
+        logger.info("Extracting '%s' archive %s to %s.", ext, file, dir_)
+        with archive_readers[ext](file, "r") as archive:
+            archive.extractall(dir_)
+        for root, dirs, _ in os.walk(dir_):
+            if "Contents" in dirs:
+                logger.info("MFF file found in %s", root)
+                return Path(root)
+        else:
+            raise (f"The '{ext}' archive does not contain a 'Content' folder.")
+
+    elif ext == ".mff":
+        return file
+
+
+@verbose
 def mff2bids(
-    mff_source,
-    bids_root,
-    subject=None,
-    task=None,
-    session=None,
+    mff_source: Union[str, Path],
+    bids_root: Union[str, Path],
+    subject,
+    session,
+    task,
     run=None,
     event_id=None,
-    line_frequency=50,
+    save_source: bool = False,
+    working_dir=None,
+    *,
+    overwrite: bool = False,
+    verbose=None,
 ):
-    bids_path = BIDSPath(root=Path(bids_root))
-    bids_path.update(subject=subject)
-    bids_path.update(session=session)
-    bids_path.update(task=task)
-    bids_path.update(datatype="eeg")
-    bids_path.update(run=run)
-
-    print(Path(mff_source))
-
-    # load EEG data
-    raw = mne.io.read_raw_egi(Path(mff_source), preload=True)
-    raw.info["line_freq"] = line_frequency
-
-    # rename channels
-    new_chs = {}
-    for i, ch in enumerate(raw.info["ch_names"]):
-        if i > 256:
-            break
-        new_chs[ch] = ch_names_egi[i]
-    raw.rename_channels(new_chs)
-
-    # find events in stim channel
-    events_data = None
-    if event_id is not None:
-        events_data = mne.find_events(raw, stim_channel="STI 014")
-
-    # event_id = {"fixation cross":1,"stim":2}
-
-    # write BIDS
-    write_raw_bids(
-        raw,
-        bids_path,
-        format="BrainVision",
-        events_data=events_data,
-        event_id=event_id,
-        overwrite=True,
-        allow_preload=True,
+    logger.info("Processing %s", mff_source)
+    working_dir = (
+        tempfile.TemporaryDirectory(suffix=".mff")
+        if working_dir is None
+        else working_dir
     )
+    with working_dir as wd:
+        mff_source = _extract_folder(mff_source, dir_=wd)
 
-    bpath = bids_path.copy()
-    bpath.update(extension=".json")
+        # BIDS root
+        bids_root = _ensure_path(bids_root, must_exist=False)
+        eeg_bids_path = BIDSPath(
+            root=bids_root,
+            subject=subject,
+            session=session,
+            task=task,
+            datatype="eeg",
+            run=run,
+        )
+        # JSON sidecar path
+        json_bids_path = eeg_bids_path.copy()
+        json_bids_path.update(extension=".json")
+        # Source path.
+        if save_source:
+            source_bids_root = bids_root.joinpath("sourcedata")
+            logger.info("Saving source data to %s", source_bids_root)
+            source_bids_path = eeg_bids_path.copy()
+            source_bids_path.update(root=source_bids_root)
+            source_bids_path = source_bids_path.fpath.with_suffix(
+                mff_source.suffix
+            )
+            if source_bids_path.exists() and overwrite is False:
+                raise ValueError(
+                    f"Cannot write source data. Source data {source_bids_path}"
+                    "already exists but overwrite is set to False."
+                )
 
-    sidecar_dict = {
-        "Manufacturer": "EGI",
-        "EEGReference": "Cz",
-        "InstitutionName": "Fondation Campus Biotech Geneva",
-        "InstitutionalDepartmentName": "Human Neuroscience Platform - MEEG-BCI Facility",  # noqa: E501
-        "DeviceSerialNumber": "HNP_GES400",
-        "CapManufacturer": "EGI",
-        "CapManufacturersModelName": "HydroCel GSN 256",
-    }
+        # load EEG data
+        raw = mne.io.read_raw_egi(mff_source, preload=True)
+        raw.info["line_freq"] = 50  # Hz, hard-coded for campus biotech/Europe.
 
-    update_sidecar_json(bpath, sidecar_dict)
-    make_dataset_description(
-        path=bids_root, name="dataset_description.json", dataset_type="raw"
-    )
+        # rename channels
+        new_chs = dict()
+        for i, ch in enumerate(raw.info["ch_names"]):
+            if i > 256:
+                break
+            new_chs[ch] = CH_NAMES_EGI[i]
+        raw.rename_channels(new_chs)
 
+        # find events in stim channel
+        stim_channel = "STI 014"
+        if stim_channel in raw.ch_names:
+            events_data = mne.find_events(raw, stim_channel=stim_channel)
+            # if event_id are not provided
+            if event_id is None:
+                event_ids = np.unique(events_data[:, 2])
+                event_id = {}
+                for event in event_ids:
+                    event_id[f"Unkown_{event}"] = event
+            # TODO: check is provided events match events_data
+        else:
+            events_data = None
+            event_id = None
 
-if __name__ == "__main__":
-    mff2bids(
-        r"C:\Local\git\BIDS\raw\5164-V1-aud-run1_20190312_024901.mff",
-        r"C:\Local\git\BIDS\datasets\study02",
-        subject="001",
-        task="MMN",
-        session="eeg",
-        run="002",
-    )
+        # update sidecar json
+        sidecar_dict = {
+            "Manufacturer": "EGI",
+            "EEGReference": "Cz",
+            "InstitutionName": "Fondation Campus Biotech Geneva",
+            "InstitutionalDepartmentName": "Human Neuroscience Platform - MEEG-BCI Facility",  # noqa: E501
+            "DeviceSerialNumber": "HNP_GES400",
+            "CapManufacturer": "EGI",
+            "CapManufacturersModelName": "HydroCel GSN 256",
+        }
+
+        # write eeg
+        write_raw_bids(
+            raw,
+            eeg_bids_path,
+            format="BrainVision",
+            events_data=events_data,
+            event_id=event_id,
+            allow_preload=True,
+            overwrite=overwrite,
+        )
+        update_sidecar_json(json_bids_path, sidecar_dict)
+        make_dataset_description(
+            path=bids_root, name="dataset_description.json", dataset_type="raw"
+        )
+        # write source
+        if save_source:
+            copytree(mff_source, source_bids_path, dirs_exist_ok=overwrite)
+
+    return bids_root
