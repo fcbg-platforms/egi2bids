@@ -58,7 +58,7 @@ style = [
 ]
 test = [
     'pybids',
-    'pytest',
+    'pytest>=6.0',
     'pytest-cov',
     'pytest-timeout',
 ]
