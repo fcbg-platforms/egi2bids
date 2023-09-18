@@ -20,32 +20,33 @@ from .utils._checks import check_value, ensure_path
 from .utils.logs import logger, verbose
 
 
-def _extract_folder(file: Union[str, Path], dir_: Union[str, Path] = None) -> Path:
+_ARCHIVE_READERS = {
+    ".tar": tarfile.open,
+    ".zip": zipfile.ZipFile,
+}
+
+
+def _extract_folder(
+    file: Union[str, Path], dir_: Union[str, Path] = Path.cwd()
+) -> Path:
     """Extract a .mff compressed folder to its original form."""
     # check paths and file extension
     file = ensure_path(file, must_exist=True)
-    ext = file.suffix
-    check_value(ext, (".tar", ".zip", ".mff"), "extension")
-    dir_ = Path.cwd() if dir_ is None else dir_
-    dir_ = ensure_path(dir_, must_exist=True)
-    # open the archive if needed
-    archive_readers = {
-        ".tar": tarfile.open,
-        ".zip": zipfile.ZipFile,
-    }
-    if ext in (".tar", ".zip"):
-        logger.info("Extracting '%s' archive %s to %s.", ext, file, dir_)
-        with archive_readers[ext](file, "r") as archive:
-            archive.extractall(dir_)
-        for root, dirs, _ in os.walk(dir_):
-            if "Contents" in dirs:
-                logger.info("MFF file found in %s", root)
-                return Path(root)
-        else:
-            raise (f"The '{ext}' archive does not contain a 'Content' folder.")
-
-    elif ext == ".mff":
+    check_value(file.suffix, (".tar", ".zip", ".mff"), "extension")
+    if file.suffix == ".mff":
         return file
+    dir_ = ensure_path(dir_, must_exist=True)
+    logger.info("Extracting '%s' archive %s to %s.", file.suffix.upper(), file, dir_)
+    with _ARCHIVE_READERS[file.suffix](file, "r") as archive:
+        archive.extractall(dir_)
+    for root, dirs, _ in os.walk(dir_):
+        if "Contents" in dirs:
+            logger.info("MFF file found in %s.", root)
+            return Path(root)
+    else:
+        raise RuntimeError(
+            f"The '{file.suffix.upper()}' archive does not contain a 'Content' folder."
+        )
 
 
 @verbose
