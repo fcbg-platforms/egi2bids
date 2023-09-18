@@ -44,12 +44,10 @@ jobs:
       - name: Run pytest
         run: pytest egi2bids --cov=egi2bids --cov-report=xml --cov-config=pyproject.toml
       - name: Upload to codecov
-        if: ${{ matrix.os == 'ubuntu' && matrix.python-version == 3.9 }}
         uses: codecov/codecov-action@v3
         with:
           files: ./coverage.xml
           flags: unittests # optional
           name: codecov-umbrella # optional
-          fail_ci_if_error: true # optional (default = false)
           fail_ci_if_error: false # optional (default = false)
           verbose: true # optional (default = false)
