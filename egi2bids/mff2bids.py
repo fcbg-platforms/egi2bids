@@ -19,7 +19,6 @@ from .constants import _CH_NAMES_EGI
 from .utils._checks import check_value, ensure_path
 from .utils.logs import logger, verbose
 
-
 _ARCHIVE_READERS = {
     ".tar": tarfile.open,
     ".zip": zipfile.ZipFile,
