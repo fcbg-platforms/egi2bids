@@ -99,9 +99,7 @@ class bidsToEgiGui(QWidget):
         layout.addSpacing(10)
         layout.addWidget(self.labelCurrentBIDSPath)
         layout.addSpacing(15)
-        layout.addWidget(
-            self.btnWriteBIDS, alignment=Qt.AlignmentFlag.AlignHCenter
-        )
+        layout.addWidget(self.btnWriteBIDS, alignment=Qt.AlignmentFlag.AlignHCenter)
         layout.addSpacing(15)
         layout.addWidget(self.logBox)
         layout.addWidget(self.labelCredits)
@@ -149,9 +147,7 @@ class bidsToEgiGui(QWidget):
             self.pushLog("EGI folder does not exist", flag="warning")
         else:
             if ext.lower() != ".mff":
-                self.pushLog(
-                    "EGI folder has no .mff extension", flag="warning"
-                )
+                self.pushLog("EGI folder has no .mff extension", flag="warning")
         self.EGIfile = fname
 
     def checkForm(self):
