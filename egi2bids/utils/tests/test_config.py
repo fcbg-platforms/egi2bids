@@ -1,3 +1,5 @@
+"""Test config.py"""
+
 from io import StringIO
 
 from egi2bids.utils.config import sys_info

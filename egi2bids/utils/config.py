@@ -7,7 +7,7 @@ from typing import IO, Callable, List, Optional
 import psutil
 from packaging.requirements import Requirement
 
-from ._checks import _check_type
+from ._checks import check_type
 
 
 def sys_info(fid: Optional[IO] = None, developer: bool = False):
@@ -16,12 +16,12 @@ def sys_info(fid: Optional[IO] = None, developer: bool = False):
     Parameters
     ----------
     fid : file-like | None
-        The file to write to, passed to :func:`print`.
-        Can be None to use :data:`sys.stdout`.
+        The file to write to, passed to :func:`print`. Can be None to use
+        :data:`sys.stdout`.
     developer : bool
         If True, display information about optional dependencies.
     """
-    _check_type(developer, (bool,), "developer")
+    check_type(developer, (bool,), "developer")
 
     ljust = 26
     out = partial(print, end="", file=fid)
@@ -47,16 +47,13 @@ def sys_info(fid: Optional[IO] = None, developer: bool = False):
     # dependencies
     out("\nCore dependencies\n")
     dependencies = [Requirement(elt) for elt in requires(package)]
-    core_dependencies = [
-        dep for dep in dependencies if "extra" not in str(dep.marker)
-    ]
+    core_dependencies = [dep for dep in dependencies if "extra" not in str(dep.marker)]
     _list_dependencies_info(out, ljust, package, core_dependencies)
 
     # extras
     if developer:
         keys = (
             "build",
-            "doc",
             "test",
             "style",
         )
