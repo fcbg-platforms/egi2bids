@@ -11,6 +11,8 @@ on:
     paths:
       - '**.py'
   workflow_dispatch:
+  schedule:
+  - cron: '0 8 * * 1'
 
 jobs:
   pytest:
@@ -49,4 +51,5 @@ jobs:
           flags: unittests # optional
           name: codecov-umbrella # optional
           fail_ci_if_error: true # optional (default = false)
+          fail_ci_if_error: false # optional (default = false)
           verbose: true # optional (default = false)
