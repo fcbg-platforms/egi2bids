@@ -72,10 +72,10 @@ full = [
 ]
 
 [project.urls]
-homepage = 'https://github.com/fcbg-hnp-meeg/egi2bids'
-documentation = 'https://github.com/fcbg-hnp-meeg/egi2bids'
-source = 'https://github.com/fcbg-hnp-meeg/egi2bids'
-tracker = 'https://github.com/fcbg-hnp-meeg/egi2bids/issues'
+homepage = 'https://github.com/fcbg-platforms/egi2bids'
+documentation = 'https://github.com/fcbg-platforms/egi2bids'
+source = 'https://github.com/fcbg-platforms/egi2bids'
+tracker = 'https://github.com/fcbg-platforms/egi2bids/issues'
 
 [project.scripts]
 egi2bids-sys_info = 'egi2bids.commands.sys_info:run'
