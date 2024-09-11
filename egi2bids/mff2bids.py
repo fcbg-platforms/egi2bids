@@ -141,7 +141,7 @@ def mff2bids(
             raw,
             eeg_bids_path,
             format="BrainVision",
-            events_data=events_data,
+            events=events_data,
             event_id=event_id,
             allow_preload=True,
             overwrite=overwrite,
